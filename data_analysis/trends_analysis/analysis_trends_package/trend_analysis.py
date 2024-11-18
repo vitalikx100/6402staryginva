@@ -25,6 +25,10 @@ def log_results(func):
 class TrendAnalyzer:
     """
     Класс для анализа временного ряда поисковых трендов.
+
+    Поля класса:
+    data (pd.Series): Временной ряд данных, переданный для анализа.
+    results (pd.DataFrame): Таблица для хранения результатов анализа.
     """
 
     def __init__(self, data: pd.Series):
@@ -130,6 +134,14 @@ class TrendAnalyzer:
         filename (str): Имя файла для сохранения.
 
         """
+        self.results = pd.DataFrame ({
+            'Moving Average': self.moving_average(),
+            'Differential': self.difference(),
+            'Autocorrelation': pd.Series([self.autocorrelation(lag=1)] * len(self.data), index=self.data.index),
+            'Maximum': self.find_extremium_points()['Maximum'],
+            'Minimum': self.find_extremium_points()['Minimum']
+        })
+
         self.results.to_excel(filename)
 
     @log_results
