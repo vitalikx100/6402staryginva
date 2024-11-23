@@ -7,16 +7,17 @@ def read_file(file: str) -> dict[str, float]:
     '''
      Данная функция считывает файл.
      file принимает строковое значение, представляющее собой имя файла
-     и возвращает словарь со строковым ключом и значением типа число с плавающей точкой (float).
+     и возвращает словарь со строковым ключом и значением типа число с плавающей точкой.
     '''
     with open(file, 'r') as file:
         params = yaml.safe_load(file)
     return params
 
-def calculate_y(params: dict[str, float]) -> None :
+
+def calculate_y(params: dict[str, float]) -> None:
     '''
      Вычисление значения функции.
-     params принимает словарь со строковым ключом и значением с типом плавающая точка (float).
+     params принимает словарь со строковым ключом и значением с типом плавающая точка.
     '''
     x_value = params['n0']
     y_values = []
@@ -28,6 +29,7 @@ def calculate_y(params: dict[str, float]) -> None :
     with open('results.txt', 'w') as file:
         for y_value in y_values:
             file.write(f'y: , {y_value}\n')
+
 
 def parse_args(params: dict[str, float]) -> float:
     '''
@@ -47,6 +49,7 @@ def parse_args(params: dict[str, float]) -> float:
         if value is not None:
             params[key] = value
     calculate_y(params)
+
 
 if __name__ == '__main__':
     params = read_file('config.yaml')
