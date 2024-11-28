@@ -1,7 +1,9 @@
 import threading
 import logging
 import time
+import pandas as pd
 from data_analysis.get_trends_data import TrendsData
+from data_analysis.trends_analysis.analysis_trends_package.trend_analysis import TrendAnalyzer
 
 
 class TrendsMonitoring(threading.Thread):
@@ -10,7 +12,7 @@ class TrendsMonitoring(threading.Thread):
 
     Поля класса:
     trends_data (TrendsData): Объект TrendsData для получения данных трендов.
-    interval (int): Интервал времени в секундах между запусками fetch_data.
+    time_delay (int): Интервал времени в секундах между запусками мониторинга.
     is_active (Bool): флаг для регулирования выполнения мониторинга потоком
     logger: Логгер для записи информации о процессе мониторинга.
     """
@@ -21,7 +23,7 @@ class TrendsMonitoring(threading.Thread):
 
         Параметры:
         trends_data (TrendsData): Объект TrendsData для получения данных трендов.
-        interval (int): Интервал времени между запусками fetch_data.
+        time_delay (int): Интервал времени между запусками мониторинга.
         """
         super().__init__()
         self.trends_data = trends_data
@@ -32,22 +34,31 @@ class TrendsMonitoring(threading.Thread):
     def run(self):
         """
         Метод, который выполняется при запуске потока.
-        Периодически вызывает fetch_data, пока не будет установлен флаг остановки.
+        Обрабатывает полученные данные раз в задержку времени.
         """
         self.logger.info("Trends monitoring started.")
         while self.is_active:
             try:
-                results = self.trends_data.fetch_data()
-                if not results.empty:
-                    print(results)
+                data = self.trends_data.fetch_data()
+                data_series = data.iloc[:, 0]
+                analyzer = TrendAnalyzer(data_series)
+                results = analyzer.generate_results()
+                if results:
+                    results_dict = {}
+                    for name, series in results:
+                        results_dict[name] = series
+                    results_df = pd.DataFrame(results_dict, index=data_series.index)
+                    self.logger.info("Generated results successfully.")
+                    print(results_df)
                 time.sleep(self.time_delay)
             except Exception as e:
-                self.logger.warning(f"Error data fetching: {e}")
+                self.logger.error(f"Error monitoring data: {e}")
                 self.is_active = False
+                raise
 
     def stop(self):
-        """
-        Останавливает выполнение потока.
-        """
+        """Останавливает выполнение потока."""
+
         self.is_active = False
-        self.logger.info("Stopping trends monitoring service")
+        super().join(timeout=None)
+        self.logger.info("Monitoring service OFF")
